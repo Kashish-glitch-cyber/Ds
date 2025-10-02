@@ -1,0 +1,463 @@
+# data_structures_and_algorithms.py
+#
+# Comprehensive file containing Python code for all Data Structures and Algorithms
+# practicals (1 through 8) as extracted from your course journal.
+# This file is suitable for uploading to GitHub.
+#
+# NOTE: This file includes demonstration blocks using the if __name__ == "__main__":
+# structure. Run this file directly to see all the code in action.
+#
+
+import sys
+from array import array
+from collections import deque
+
+# ==============================================================================
+# PRACTICAL 1: ARRAY OPERATIONS
+# ==============================================================================
+
+def array_insert(arr_list, element, position):
+    """P1-A: Insert an element at a specific position (0-based) in an array/list."""
+    try:
+        # Using a regular Python list for flexibility
+        arr_list.insert(position, element)
+        print(f"  Inserted {element} at position {position}.")
+        print(f"  Result: {arr_list}")
+    except IndexError:
+        print(f"  Error: Position {position} is invalid for insertion.")
+    return arr_list
+
+def array_delete(arr_list, position):
+    """P1-B: Delete an element from a specific position (0-based) from an array/list."""
+    try:
+        if 0 <= position < len(arr_list):
+            deleted_element = arr_list.pop(position)
+            print(f"  Deleted {deleted_element} from position {position}.")
+            print(f"  Result: {arr_list}")
+        else:
+            print(f"  Error: Position {position} is out of bounds for deletion.")
+    except Exception as e:
+        print(f"  An error occurred: {e}")
+    return arr_list
+
+def array_linear_search(arr_list, key):
+    """P1-C: Search for an element in an array using Linear Search."""
+    for i in range(len(arr_list)):
+        if arr_list[i] == key:
+            print(f"  Element {key} found at position {i}.")
+            return i
+    print(f"  Element {key} not found.")
+    return -1
+
+# ==============================================================================
+# PRACTICAL 2: LINKED LIST OPERATIONS (Using dictionary-based node)
+# ==============================================================================
+
+def ll_display(head):
+    """Helper function to traverse and print the linked list."""
+    temp = head
+    path = []
+    while temp is not None:
+        path.append(str(temp.get('data')))
+        temp = temp.get('next')
+    print("  List: " + " -> ".join(path) + " -> None")
+
+def ll_insert_begin(head, value):
+    """P2-B: Insert a node at the beginning."""
+    new_node = {'data': value, 'next': head}
+    return new_node
+
+def ll_insert_end(head, value):
+    """P2-B: Insert a node at the end."""
+    new_node = {'data': value, 'next': None}
+    if head is None:
+        return new_node
+    
+    temp = head
+    while temp['next'] is not None:
+        temp = temp['next']
+    temp['next'] = new_node
+    return head
+
+def ll_insert_pos(head, value, pos):
+    """P2-B: Insert a new node at a given 0-based position."""
+    if pos == 0:
+        return ll_insert_begin(head, value)
+    
+    new_node = {'data': value, 'next': None}
+    temp = head
+    
+    # Traverse to the node *before* the insertion point (pos - 1)
+    for _ in range(pos - 1):
+        if temp is None or temp['next'] is None:
+            print(f"  Warning: Position {pos} out of bounds, inserting at end.")
+            break
+        temp = temp['next']
+    
+    new_node['next'] = temp['next']
+    temp['next'] = new_node
+    return head
+
+def ll_delete_at_pos(head, pos):
+    """P2-C: Delete a node from a given 0-based position."""
+    if head is None:
+        print("  List is empty, nothing to delete.")
+        return None
+
+    # Case 1: Deleting the head (position 0)
+    if pos == 0:
+        return head['next']
+
+    temp = head
+    
+    # Traverse to the node *before* the deletion point (pos - 1)
+    for _ in range(pos - 1):
+        if temp is None or temp['next'] is None:
+            print(f"  Error: Position {pos} out of bounds, no deletion performed.")
+            return head
+        temp = temp['next']
+
+    # Case 2: Deletion in the middle or end
+    if temp is not None and temp['next'] is not None:
+        print(f"  Deleted node with data: {temp['next']['data']} at position {pos}")
+        temp['next'] = temp['next']['next']
+    
+    return head
+
+# ==============================================================================
+# PRACTICAL 3: STACK OPERATIONS (LIFO)
+# ==============================================================================
+
+# Stack for P3-A
+stack_list = []
+
+def stack_push(item):
+    """P3-A: Adds an item to the top of the stack."""
+    stack_list.append(item)
+    print(f"  Pushed: {item}. Current Stack: {stack_list}")
+
+def stack_pop():
+    """P3-A: Removes and returns the item from the top of the stack."""
+    if not stack_list:
+        return "Stack is empty"
+    
+    popped_item = stack_list.pop()
+    print(f"  Popped: {popped_item}. Current Stack: {stack_list}")
+    return popped_item
+
+def precedence(op):
+    """P3-B: Helper for operator precedence."""
+    if op in ['+', '-']:
+        return 1
+    if op in ['*', '/']:
+        return 2
+    if op in ['^']:
+        return 3
+    return 0
+
+def infix_to_postfix(exp):
+    """P3-B: Convert an infix expression to a postfix expression using a stack."""
+    op_stack = []
+    result = ""
+    
+    for ch in exp:
+        if ch.isalnum():
+            result += ch
+        elif ch == '(':
+            op_stack.append(ch)
+        elif ch == ')':
+            while op_stack and op_stack[-1] != '(':
+                result += op_stack.pop()
+            if op_stack and op_stack[-1] == '(':
+                op_stack.pop() # Pop the '('
+        elif ch in ['+', '-', '*', '/', '^']:
+            while (op_stack and 
+                   precedence(op_stack[-1]) >= precedence(ch) and 
+                   op_stack[-1] != '('):
+                result += op_stack.pop()
+            op_stack.append(ch)
+            
+    while op_stack:
+        result += op_stack.pop()
+        
+    return result
+
+# ==============================================================================
+# PRACTICAL 4: QUEUE OPERATIONS (FIFO)
+# ==============================================================================
+
+# Queue for P4-A and P4-B. Using deque for efficiency.
+queue_data = deque()
+
+def queue_enqueue(item):
+    """P4-A: Adds an item to the end of the queue."""
+    queue_data.append(item)
+
+def queue_dequeue():
+    """P4-A: Removes and returns the item from the front of the queue."""
+    if queue_data:
+        return queue_data.popleft()
+    else:
+        return "Queue is empty"
+
+def queue_display():
+    """P4-A: Prints the current contents of the queue."""
+    print(f"  Current Queue: {list(queue_data)}")
+
+def simulate_queueing_system():
+    """P4-B: Simulate a simple customer queueing system."""
+    
+    def arrive(customer_name):
+        queue_data.append(customer_name)
+        print(f"  [Arrival] {customer_name} has joined the queue.")
+
+    def serve():
+        if queue_data:
+            served = queue_data.popleft()
+            print(f"  [Service] {served} is being served.")
+        else:
+            print("  [Service] No customers to serve.")
+
+    def show_waiting_queue():
+        print(f"  Waiting Queue: {list(queue_data)}")
+
+    queue_data.clear() # Reset for simulation
+    
+    arrive("Customer A")
+    arrive("Customer B")
+    show_waiting_queue()
+    serve()
+    arrive("Customer C")
+    show_waiting_queue()
+    serve()
+    serve()
+    serve()
+
+# ==============================================================================
+# PRACTICAL 5 & 6: BINARY SEARCH TREE (BST) OPERATIONS & TRAVERSALS
+# ==============================================================================
+
+# Node structure: { 'data': value, 'left': child_node, 'right': child_node }
+def bst_create_node(data):
+    """Creates a new BST node dictionary."""
+    return {'data': data, 'left': None, 'right': None}
+
+def bst_insert(root, data):
+    """Inserts a new node into the BST and returns the new root."""
+    if root is None:
+        return bst_create_node(data)
+
+    if data < root['data']:
+        root['left'] = bst_insert(root['left'], data)
+    else:
+        root['right'] = bst_insert(root['right'], data)
+        
+    return root
+
+def inorder_traversal(root):
+    """P5-A, P5-B, P6-B: Performs Inorder Traversal (Left -> Root -> Right)."""
+    if root is not None:
+        inorder_traversal(root['left'])
+        sys.stdout.write(str(root['data']) + " ")
+        inorder_traversal(root['right'])
+
+def preorder_traversal(root):
+    """P6-A: Performs Preorder Traversal (Root -> Left -> Right)."""
+    if root is not None:
+        sys.stdout.write(str(root['data']) + " ")
+        preorder_traversal(root['left'])
+        preorder_traversal(root['right'])
+
+def postorder_traversal(root):
+    """P6-C: Performs Postorder Traversal (Left -> Right -> Root)."""
+    if root is not None:
+        postorder_traversal(root['left'])
+        postorder_traversal(root['right'])
+        sys.stdout.write(str(root['data']) + " ")
+
+# ==============================================================================
+# PRACTICAL 7: SORTING ALGORITHMS
+# ==============================================================================
+
+def bubble_sort(arr):
+    """P7-A: Sorts a list using the Bubble Sort algorithm."""
+    n = len(arr)
+    arr_copy = arr[:]
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            if arr_copy[j] > arr_copy[j + 1]:
+                arr_copy[j], arr_copy[j + 1] = arr_copy[j + 1], arr_copy[j] 
+    return arr_copy
+
+def insertion_sort(arr):
+    """P7-B: Sorts a list using the Insertion Sort algorithm."""
+    arr_copy = arr[:]
+    for i in range(1, len(arr_copy)):
+        key = arr_copy[i]
+        j = i - 1
+        while j >= 0 and key < arr_copy[j]:
+            arr_copy[j + 1] = arr_copy[j]
+            j -= 1
+        arr_copy[j + 1] = key
+    return arr_copy
+
+def selection_sort(arr):
+    """P7-C: Sorts a list using the Selection Sort algorithm."""
+    n = len(arr)
+    arr_copy = arr[:]
+    for i in range(n):
+        min_idx = i
+        for j in range(i + 1, n):
+            if arr_copy[j] < arr_copy[min_idx]:
+                min_idx = j
+        arr_copy[i], arr_copy[min_idx] = arr_copy[min_idx], arr_copy[i]
+    return arr_copy
+
+# ==============================================================================
+# PRACTICAL 8: SEARCHING ALGORITHMS
+# ==============================================================================
+
+# Linear Search is already implemented in P1-C, named array_linear_search
+
+def binary_search(arr, key):
+    """P8-B: Searches for a key in a SORTED list using Binary Search."""
+    low = 0
+    high = len(arr) - 1
+    
+    while low <= high:
+        mid = (low + high) // 2
+        
+        if arr[mid] == key:
+            return mid
+        elif key < arr[mid]:
+            high = mid - 1
+        else:
+            low = mid + 1
+            
+    return -1
+
+# ==============================================================================
+# EXECUTION/DEMONSTRATION BLOCK
+# ==============================================================================
+
+def main_demonstration():
+    print("=========================================================")
+    print("|| DATA STRUCTURES & ALGORITHMS PRACTICALS DEMONSTRATION ||")
+    print("=========================================================")
+
+    # --- PRACTICAL 1: ARRAY OPERATIONS ---
+    print("\n[PRACTICAL 1: ARRAY OPERATIONS]")
+    
+    # Using a list for demonstration
+    initial_list = [10, 20, 30, 40, 50]
+    print(f"  Initial List: {initial_list}")
+    
+    # P1-A: Insert
+    arr_list_a = array_insert(initial_list[:], 60, 2)
+    
+    # P1-B: Delete
+    arr_list_b = array_delete(initial_list[:], 1)
+    
+    # P1-C: Search
+    array_linear_search(initial_list, 30)
+    array_linear_search(initial_list, 99)
+
+    # --- PRACTICAL 2: LINKED LIST OPERATIONS ---
+    print("\n[PRACTICAL 2: LINKED LIST OPERATIONS]")
+    
+    # P2-A: Create (Initial List: 10 -> 20 -> 30)
+    ll_head = {'data': 10, 'next': {'data': 20, 'next': {'data': 30, 'next': None}}}
+    print("  Initial Linked List:")
+    ll_display(ll_head)
+    
+    # P2-B: Insert
+    ll_head = ll_insert_begin(ll_head, 5) # Insert at beginning
+    ll_head = ll_insert_end(ll_head, 50) # Insert at end
+    ll_head = ll_insert_pos(ll_head, 15, 2) # Insert at position 2
+    print("  After all insertions (5, 50, 15 at pos 2):")
+    ll_display(ll_head)
+    
+    # P2-C: Delete
+    ll_head = ll_delete_at_pos(ll_head, 1) # Delete node at position 1 (data 10)
+    print("  After deleting node at position 1:")
+    ll_display(ll_head)
+    
+    # --- PRACTICAL 3: STACK OPERATIONS ---
+    print("\n[PRACTICAL 3: STACK OPERATIONS (LIFO)]")
+    
+    # P3-A: Stack Implementation
+    global stack_list
+    stack_list = []
+    stack_push(10)
+    stack_push(20)
+    stack_pop()
+    
+    # P3-B: Infix to Postfix Conversion
+    exp = "(A+B)*C"
+    postfix_result = infix_to_postfix(exp)
+    print(f"  Infix Expression: {exp}")
+    print(f"  Postfix Expression: {postfix_result}")
+
+    # --- PRACTICAL 4: QUEUE OPERATIONS ---
+    print("\n[PRACTICAL 4: QUEUE OPERATIONS (FIFO)]")
+    
+    # P4-A: Queue Implementation
+    global queue_data
+    queue_data.clear()
+    queue_enqueue(100)
+    queue_enqueue(200)
+    queue_display()
+    
+    removed_item = queue_dequeue()
+    print(f"  Dequeued: {removed_item}")
+    queue_display()
+    
+    # P4-B: Queueing System Simulation
+    print("  Queueing System Simulation:")
+    simulate_queueing_system()
+    
+    # --- PRACTICAL 5 & 6: BST TRAVERSALS ---
+    print("\n[PRACTICAL 5 & 6: BINARY SEARCH TREE TRAVERSALS]")
+    
+    values = [50, 30, 70, 20, 40, 60, 80]
+    bst_root = None
+    for val in values:
+        bst_root = bst_insert(bst_root, val)
+    
+    sys.stdout.write("  Pre-order Traversal (Root, Left, Right): ")
+    preorder_traversal(bst_root)
+    sys.stdout.write("\n")
+    
+    sys.stdout.write("  In-order Traversal (Sorted Data): ")
+    inorder_traversal(bst_root)
+    sys.stdout.write("\n")
+    
+    sys.stdout.write("  Post-order Traversal (Left, Right, Root): ")
+    postorder_traversal(bst_root)
+    sys.stdout.write("\n")
+
+    # --- PRACTICAL 7: SORTING ALGORITHMS ---
+    print("\n[PRACTICAL 7: SORTING ALGORITHMS]")
+    unsorted_list = [10, 3, 7, 1, 9]
+    print(f"  Unsorted List: {unsorted_list}")
+    
+    print(f"  Bubble Sort Result: {bubble_sort(unsorted_list)}")
+    print(f"  Insertion Sort Result: {insertion_sort(unsorted_list)}")
+    print(f"  Selection Sort Result: {selection_sort(unsorted_list)}")
+
+    # --- PRACTICAL 8: SEARCHING ALGORITHMS ---
+    print("\n[PRACTICAL 8: SEARCHING ALGORITHMS]")
+    search_arr = [10, 20, 30, 40, 50]
+    print(f"  Search Array (Sorted): {search_arr}")
+    
+    # P8-A: Linear Search (Already done in P1-C)
+    print(f"  Linear Search (for 30): Index {array_linear_search(search_arr, 30)}")
+
+    # P8-B: Binary Search
+    print(f"  Binary Search (for 40): Index {binary_search(search_arr, 40)}")
+    print(f"  Binary Search (for 99): Index {binary_search(search_arr, 99)}")
+    print("=========================================================")
+
+
+if __name__ == "__main__":
+    main_demonstration()
